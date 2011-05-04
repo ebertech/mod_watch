@@ -1,0 +1,45 @@
+#
+# Makefile.in
+#
+# Copyright 2001, 2003 by Anthony Howe.  All rights reserved.
+#
+
+########################################################################
+### Pick one that best suits your system.
+########################################################################
+
+#
+# Where the scripts should live
+#
+SCRIPTDIR=/usr/local/sbin
+
+#
+# Define to use unsigned long long counters.
+#
+#DEF=-DUSE_OCTET_COUNTER_64
+
+########################################################################
+### No further configuration beyond this point.
+########################################################################
+
+MODULE = watch
+
+#
+# Cloned based on examples from modules/*/Makefile.in
+#
+include $(top_srcdir)/build/special.mk
+
+showhash: showhash.c
+
+$(SCRIPTDIR):
+	mkdir $(SCRIPTDIR)
+
+$(SCRIPTDIR)/mod_watch.pl: $(SCRIPTDIR) mod_watch.pl
+	chmod u+x mod_watch.pl
+	cp -f mod_watch.pl $(SCRIPTDIR)
+
+$(SCRIPTDIR)/apache2mrtg.pl: $(SCRIPTDIR) apache2mrtg.pl
+	chmod u+x apache2mrtg.pl
+	cp -f apache2mrtg.pl $(SCRIPTDIR)
+
+install: $(SCRIPTDIR)/mod_watch.pl $(SCRIPTDIR)/apache2mrtg.pl

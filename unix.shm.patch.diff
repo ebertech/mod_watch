@@ -1,0 +1,70 @@
+--- srclib/apr/shmem/unix/shm.c.orig    Wed Feb  5 10:02:31 2003
++++ srclib/apr/shmem/unix/shm.c Wed Feb  5 11:17:44 2003
+@@ -240,9 +240,32 @@
+         if (shmctl(new_m->shmid, IPC_STAT, &shmbuf) == -1) {
+             return errno;
+         }
+-        apr_uid_current(&uid, &gid, pool);
++
++       /* In a forking model, the parent process runs as root, while
++        * the child processes run as some unprivelaged user and group.
++        * Any shared memory and mutexes allocated for modules must be
++        * accessible by child processes, therefore we must either
++        * change the ownership to that of the child process (assuming
++        * allocation by an ap_hook_post_config handler from within the
++        * root-owned parent process) OR change the permissions to either
++        * be group or world read/writable.
++        *
++        * The former is the more suitable method since it maintains
++        * tighter security on the child processess, but requires that
++        * Aapche (or its modules) provided apr_shm_create() the uid/gid
++        * of an unprivelaged user and group either by accessing
++        * unixd_config or changing the API.
++        *
++        * The latter is a simpler solution changing permissions from
++        * unspecified to 0660 or 0666, but raises in my mind security
++        * concerns about a root owned shared memory block (though I
++        * could be just overly paranoid).
++        */
++       apr_uid_current(&uid, &gid, pool);
+         shmbuf.shm_perm.uid = uid;
+         shmbuf.shm_perm.gid = gid;
++        shmbuf.shm_perm.mode = 0660;
++
+         if (shmctl(new_m->shmid, IPC_SET, &shmbuf) == -1) {
+             return errno;
+         }
+@@ -387,9 +410,32 @@
+         if (shmctl(new_m->shmid, IPC_STAT, &shmbuf) == -1) {
+             return errno;
+         }
+-        apr_uid_current(&uid, &gid, pool);
++
++       /* In a forking model, the parent process runs as root, while
++        * the child processes run as some unprivelaged user and group.
++        * Any shared memory and mutexes allocated for modules must be
++        * accessible by child processes, therefore we must either
++        * change the ownership to that of the child process (assuming
++        * allocation by an ap_hook_post_config handler from within the
++        * root-owned parent process) OR change the permissions to either
++        * be group or world read/writable.
++        *
++        * The former is the more suitable method since it maintains
++        * tighter security on the child processess, but requires that
++        * Aapche (or its modules) provided apr_shm_create() the uid/gid
++        * of an unprivelaged user and group either by accessing
++        * unixd_config or changing the API.
++        *
++        * The latter is a simpler solution changing permissions from
++        * unspecified to 0660 or 0666, but raises in my mind security
++        * concerns about a root owned shared memory block (though I
++        * could be just overly paranoid).
++        */
++       apr_uid_current(&uid, &gid, pool);
+         shmbuf.shm_perm.uid = uid;
+         shmbuf.shm_perm.gid = gid;
++        shmbuf.shm_perm.mode = 0660;
++
+         if (shmctl(new_m->shmid, IPC_SET, &shmbuf) == -1) {
+             return errno;
+         }

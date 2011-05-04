@@ -1,0 +1,795 @@
+<html>
+<head>
+<title>
+Snert . Com - Software - mod_watch/4.3 for Apache 2.0 &amp; MRTG
+</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="keywords" content="Apache module,mod_watch,MRTG">
+<meta name="description" content="An Apache 1.3 module that monitors the number of bytes
+passed to and from a virtual host or local user. Intended for use with MRTG.">
+<link rel="stylesheet" type="text/css" href="./style.css">
+<script language="JavaScript" type="text/javascript" src="./mailto.js"></script>
+</head>
+
+<body background="Img/bg.gif" bgcolor="#ffffff" text="#000000" link="#0000ff" vlink="#000080" alink="#ff00ff">
+
+<!-- MARGINS -->
+<table cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr>
+	<td rowspan="2" width="120">&nbsp;</td>
+	<td width="250"><img alt="Snert . Com" src="Img/sun.gif" width="105" height="103"></td>
+	<td align="left">
+		<span class="title">mod_watch/4.3</span>
+		<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<span class="plain">from</span>&nbsp;&nbsp;
+		<span class="snert">Snert . Com</span>
+	</td>
+	<td rowspan="2" valign="top" align="right" width="60">&nbsp;</td>
+</tr><tr>
+	<td colspan="2">
+<!-- PAGE BODY -->
+
+<p style="text-align: center;">
+<a href="http://httpd.apache.org/">
+<img src="Img/apache-header-476-62.png" alt="Apache" width="476" height="62" border="0"></a><br>
+<a href="http://www.mrtg.org/">
+<img src="Img/mrtg-bar.png" alt="MRTG" width="476" height="25" border="0"></a>
+</p>
+
+<h2 align="center">Monitoring Interface for Apache 2.0 &amp; MRTG</h2>
+
+<p style="text-align: center;">
+<a href="http://www.snert.com/mrtg/html/www.snert.com.html">
+<img border="0" width="500" height="135" src="http://www.snert.com/mrtg/img/www.snert.com-day.png" alt="Virtual host www.snert.com daily activity"></a>
+<br>
+Daily Average Graph
+<br>www.snert.com
+</p>
+
+<p style="text-align: center;">
+<a href="apache2mrtg.shtml">apache2mrtg.pl</a>
+- <a href="index.shtml">mod_watch</a>
+- <a href="mod_watch.shtml">mod_watch.pl</a>
+<br>
+<a href="http://www.snert.com/">Welcome</a>
+- <a href="http://www.snert.com/Software/index.html">Software</a>
+</p>
+
+
+<a name="Description"></a>
+<h3>Description</h3>
+
+<p>
+This module will watch and collect the bytes, requests, and documents in &amp; out per virtual
+host, file owner, remote-ip address, directory or location, and the web server as a whole. This
+module was designed for use with <a href="http://www.mrtg.org/">MRTG</a>,
+which will make nice graphical representations of the data, but is general
+enough that it can be applied to other purposes, as the raw data is accessed by a URL.
+This module supports mod_vhost_alias and mod_gzip.
+</p>
+
+<ul>
+<li><a href="#Installation">Download &amp; Installation</a></li>
+</ul>
+
+<a name="Configuration"></a>
+<h3>Configuration</h3>
+
+<p>
+The directives below can be added to the general Apache configuration file,
+<code>httpd.conf</code>.
+</p>
+
+<dl>
+<a name="WatchFlush"></a>
+<dt><span class="syntax">SetHandler <a href="/watch-flush">watch-flush</a></span></dt>
+<dd><span class="normal">Context: global, &lt;Directory&gt;, &lt;Location&gt;, &lt;VirtualHost&gt;</span>
+<p>
+This handler allows a remote script to request that the
+shared hash table be flushed and saved to disk for the purpose of backing up the data, without
+having to restart Apache. This handler is not required for normal operation. It should only be made
+available when required and protected by Apache access directives to allow only the localhost to
+make this request.
+</p>
+<ul>
+<blockquote>
+<pre>&lt;Location /watch-flush&gt;
+SetHandler watch-flush
+Order deny,allow
+Deny from all
+Allow from 127.0.0.1
+&lt;/Location&gt;
+</pre>
+</blockquote>
+</ul>
+</dd>
+
+
+<a name="WatchInfo"></a>
+<dt><span class="syntax">SetHandler <a href="/watch-info">watch-info</a></span></dt>
+<dd><span class="normal">Context: global, &lt;Directory&gt;, &lt;Location&gt;, &lt;VirtualHost&gt;</span>
+<p>
+This handler is used to display a line of plain text containing the
+following space separated fields:
+</p>
+<ul>
+<blockquote>
+<tt>ifName ifUptime ifInOctets ifOutOctets ifRequests ifDocuments ifActive ifOutRate</tt>
+</blockquote>
+</ul>
+<p>
+The <tt>ifName</tt> is the target name of the request made in a URL.
+The remaining fields are all numerical.  <tt>ifUptime</tt> is the
+web server's uptime in seconds. The following is <b>required</b>
+in the global context of the httpd.conf file in order for <a href="mod_watch.html">mod_watch.pl</a>
+to function:
+</p>
+<ul>
+<blockquote>
+<pre>&lt;Location /watch-info&gt;
+SetHandler watch-info
+&lt;/Location&gt;
+
+&lt;LocationMatch "^/~.+/watch-info$"&gt;
+SetHandler watch-info
+&lt;/LocationMatch&gt;
+</pre>
+</blockquote>
+</ul>
+<p>
+This will permit the following URL forms to get the virtual-host, file-owner, server,
+<a href="#WatchStateFile">spool-file</a>, and IP address data respectively:
+</p>
+<ul>
+<blockquote>
+<a href="http://www.snert.com/watch-info">http://www.snert.com/watch-info</a>
+<br><a href="http://www.snert.com/~achowe/watch-info">http://www.snert.com/~achowe/watch-info</a>
+<br><a href="http://www.snert.com/~SERVER/watch-info">http://www.snert.com/~SERVER/watch-info</a>
+<br><a href="http://www.snert.com/~mod_watch.dat/watch-info">http://www.snert.com/~spool_file/watch-info</a>
+<br>http://www.snert.com/~ip/123.45.67.89/watch-info
+</blockquote>
+</ul>
+<p>
+The string between the tilde (~) and "/watch-info" can be the name of
+any key that appears in the <a href="#WatchTable">watch-table</a> list and is the
+only way to obtain an entry when watching <a href="#WatchWhat">by-port</a>.
+</p>
+</dd>
+
+<a name="WatchList"></a>
+<dt><span class="syntax">SetHandler <a href="/watch-list">watch-list</a></span></dt>
+<dd><span class="normal">Context: global, &lt;Directory&gt;, &lt;Location&gt;, &lt;VirtualHost&gt;</span>
+<p>
+This handler is similar to <a href="#WatchInfo">watch-info</a>, but presents a
+plain text list of all the entries that would appear in <a href="#WatchTable">watch-table</a>.
+</p>
+<ul>
+<blockquote>
+<pre>&lt;Location /watch-list&gt;
+SetHandler watch-list
+&lt;/Location&gt;
+</pre>
+</blockquote>
+</ul>
+</dd>
+
+
+<a name="WatchTable"></a>
+<dt><span class="syntax">SetHandler <a href="/watch-table">watch-table</a></span></dt>
+<dd><span class="normal">Context: global, &lt;Directory&gt;, &lt;Location&gt;, &lt;VirtualHost&gt;</span>
+<p>
+This handler is intended for debugging and analysis of the shared memory hash table
+performance and weenie files:
+</p>
+<ul>
+<blockquote>
+<pre>&lt;Location /watch-table&gt;
+SetHandler watch-table
+&lt;/Location&gt;
+</pre>
+</blockquote>
+</ul>
+</dd>
+
+<a name="WatchDocuments"></a>
+<dt><span class="syntax">WatchDocuments <span class="param">mime-type ...</span></span></dt>
+<dd><span class="normal">Context: global</span>
+<p>
+A list of MIME types considered to be documents, for the purpose of counting.
+For example "text/html" would be considered a document, which loads page elements
+such as images, style sheets, audio files, etc. which are not documents, but
+elements of one.  An asterisk in the mime-type string will act as a wildcard
+for zero or more of anything. This directive will override the default list:
+</p>
+
+<ul><blockquote>
+<table border="0" cellspacing="3" cellpadding="0">
+<tr>
+	<td>application/*word</td>
+	<td rowspan="3">&nbsp;&nbsp;&nbsp;</td>
+	<td>application/*excel</td>
+	<td rowspan="3">&nbsp;&nbsp;&nbsp;</td>
+	<td>application/pdf</td>
+</tr>
+<tr>
+	<td>application/postscript</td>
+	<td>application/rtf</td>
+	<td>text/enriched</td>
+</tr>
+<tr>
+	<td>text/html</td>
+	<td>text/plain</td>
+	<td>text/richtext</td>
+</tr>
+<tr>
+	<td colspan="3">text/xml</td>
+</tr>
+</table>
+</blockquote></ul>
+</dd>
+
+<a name="WatchDynamicVirtualHost"></a>
+<dt><span class="syntax">WatchDynamicVirtualHost <span class="param">boolean</span></span></dt>
+<dd><span class="normal">Context: global</span>
+<p>Enable this flag for dynamic virtual host support (mod_vhost_alias, mod_vd, etc.) in addition
+to the static &lt;VirtualHost&gt; blocks defined in httpd.conf. This flag is disabled by default,
+unless mod_vhost_alias or mod_vd are present. If you use some other dynamic virtual host module,
+which mod_watch doesn't know how to detect, you should enable this flag.
+</p>
+</dd>
+
+<a name="WatchHashTableSize"></a>
+<dt><span class="syntax">WatchHashTableSize <span class="param">size</span></span></dt>
+<dd><span class="normal">Context: global</span>
+<p>
+A positive number specifying the size of the shared memory hash table used.
+The default is <code>991 (a prime number, but not necessary to be so)</code>.
+</p>
+</dd>
+
+<a name="WatchLogAll"></a>
+<dt><span class="syntax">WatchLogAll <span class="param">boolean</span></span></dt>
+<dd><span class="normal">Context: global</span>
+<p>
+The combination of MRTG and <a href="mod_watch.html">mod_watch.pl</a> can result
+in a significant number of uninteresting entries concerning <a href="#WatchInfo">watch-info</a>
+to appear in the access log. By default we chose NOT to count nor log any of the
+watch handlers.
+Enabling this option will generate more log data.
+</p>
+<p>
+A better way to achive the similar behaviour would be to alter the
+httpd.conf file with something like the following:
+</p>
+<ul><blockquote>
+<pre>
+SetEnvIf Request_URI "/watch-info$" IGNORE
+CustomLog /dev/null common env=IGNORE
+CustomLog logs/access_log common env=!IGNORE
+</pre>
+</blockquote></ul>
+</dd>
+
+<a name="WatchNetwork"></a>
+<dt><span class="syntax">WatchNetwork exclude <span class="param">ip/mask ...</span></span></dt>
+<dt><span class="syntax">WatchNetwork include <span class="param">ip/mask ...</span></span></dt>
+<dd><span class="normal">Context: global</span>
+<p>
+Add one or more network IP/mask pairs to either the exclusion or inclusion list.
+Requests coming from a network or host that is a member of the exclusion list
+and is not a member of the inclusion list are <i>not</i> counted. Otherwise the requests
+will be counted as outlined in <a href="#WatchStorage">WatchStorage</a>.
+</p>
+<p>
+The <span class="param">ip/mask</span> can be specified in one of several ways
+and is the same as for Apache's Allow or Deny directives (domain or host
+name strings are not supported):
+</p>
+<p>
+<ul><blockquote>
+<table border="0" cellspacing="0" cellpadding="0">
+<tr align="left">
+	<th>Form</th>
+	<td rowspan="7">&nbsp;&nbsp;&nbsp;</td>
+	<th>Example</th>
+	<td rowspan="7">&nbsp;&nbsp;&nbsp;</td>
+	<th>Equivalent</th>
+</tr>
+<tr valign="top">
+	<td>a</td><td>10</td><td>10.0.0.0/8</td>
+</tr>
+<tr valign="top">
+	<td>a.b</td><td>169.254</td><td>169.254.0.0/16</td>
+</tr>
+<tr valign="top">
+	<td>a.b.c</td><td>192.168.1</td><td>192.168.1.0/24</td>
+</tr>
+<tr valign="top">
+	<td>a.b.c.d</td><td>127.0.0.1</td><td>127.0.0.1/32</td>
+</tr>
+<tr valign="top">
+	<td>a.b.c.d/n</td><td>192.168.1.0/24</td><td>192.168.1</td>
+</tr>
+<tr valign="top">
+	<td>a.b.c.d/A.B.C.D</td><td>192.168.1.0/255.255.255.0</td><td>192.168.1.0/24</td>
+</tr>
+</table>
+
+</blockquote></ul>
+</p>
+
+<p class="warn">
+Note that support for IPv6 is present and has been implemented using the Apache 2.0 APR. It should be
+considered experimental until such time that I get positive feedback from users that it works
+and maybe some examples of the various supported forms. Note that it models the Allow/Deny syntax,
+which is a little short of IPv6 examples.
+</p>
+
+</dd>
+
+<a name="WatchStateFile"></a>
+<dt><span class="syntax">WatchStateFile <span class="param">filename</span></span></dt>
+<dd><span class="normal">Context: &lt;Directory&gt;, &lt;Location&gt;</span>
+<p>
+Used to watch by directory or location. Each <span class="param">filename</span>
+must be unique amongst all the virtual hosts, file owners, IP addresses, and other
+<span class="syntax">WatchStateFile</span> directives, otherwise the behaviour is unspecified.
+The <span class="param">filename</span> is used to store runtime data about
+a location within the <a href="#WatchStateDirectory">WatchStateDirectory</a> and is used
+to extract this data using a URL of the form:
+</p>
+<ul><blockquote>
+<tt>http://www.snert.com/~<span class="param">filename</span>/watch-info</tt>
+</blockquote></ul>
+<p>
+The <span class="param">filename</span> will also appear as an entry in the
+<a href="#WatchTable">watch-table</a> list.
+</dd>
+
+<a name="WatchStateDirectory"></a>
+<dt><span class="syntax">WatchStateDirectory <span class="param">directory</span></span></dt>
+<dd><span class="normal">Context: global</span>
+<p>
+An absolute or server-root relative path to a directory where support and the
+"weenie" text files will be kept. This directory must be readable and writeable by the Apache child
+processes. If the directory does not exist, mod_watch will create it with the
+necessary permissions. The default is <code>/var/spool/mod_watch</code>.
+</p>
+
+<p>
+The filename of each "weenie" text file stored here is either the
+virtual host name, file owner (login ID), the remote-IP address,
+or the string "SERVER". The contents of each text file is a
+string of ASCII text containing several space separated numerical fields given below.
+</p>
+
+<p>
+<ul><blockquote>
+<table border="0" cellspacing="0" cellpadding="0">
+<tr align="left">
+	<th>Name</th>
+	<td rowspan="9">&nbsp;&nbsp;&nbsp;</td>
+	<th>Type</th>
+	<td rowspan="9">&nbsp;&nbsp;&nbsp;</td>
+	<th>Description</th>
+</tr>
+<tr>
+	<td>ifInOctets</td><td>32-bit Counter</td><td>bytes received from requests (except chunked input)</td>
+</tr>
+<tr>
+	<td>ifOutOctets</td><td>32-bit Counter</td><td>bytes sent in response to requests</td>
+</tr>
+<tr>
+	<td>ifRequests</td><td>32-bit Counter</td><td>number of requests (raw hits) received</td>
+</tr>
+<tr>
+	<td>ifDocuments</td><td>32-bit Counter</td><td>number of documents sent</td>
+</tr>
+<tr>
+	<td>ifActive</td><td>16-bit Signed</td><td>number of active (concurrent) connections</td>
+</tr>
+<tr>
+	<td>ifOutRate</td><td>Float</td><td>approx. 5 minute average of bytes sent per second</td>
+</tr>
+<tr>
+	<td>periodOctets</td><td>32-bit Unsigned</td><td>bytes sent during the current 5 minute period</td>
+</tr>
+<tr>
+	<td>periodMarker</td><td>32-bit Unsigned</td><td>start <code>time()</code> of the current 5 minute period</td>
+</tr>
+</table>
+</blockquote></ul>
+</p>
+
+<p>
+When updating a set of counters, they are first looked up in the shared memory
+hash table otherwise in the <span class="syntax">WatchStateDirectory</span>. The
+number of octets in and out for a request are added
+to the current counters, and the number of requests is incremented by one.
+The number of documents is incremented by one, if the response MIME type
+matches one of the MIME types specified for the <a href="#WatchDocuments">
+WatchDocuments</a> directive. The number of active connections is incremented
+at tne start of a request and decremented at the end of the same request.
+The counters are then stored in the shared memory hash table, which may result
+in collisions being flushed to disk if the probe length is exceeded.
+</p>
+<p>
+Note that the counters, ifInOctets, ifOutOctets, ifRequest, ifDocuments, mimick SNMP
+style counters in that they are allowed to roll over.
+</p>
+
+<p>
+The ifOutRate, periodOctets, and periodMarker are experimental fields and
+may change in future versions. The ifOutRate value is computed on the first
+request after a minimum 5 minute wait period. The periodOctets counts the
+number of octets sent for each period. The periodMarker is the
+the value returned from <code>time()</code> and marks the start of the current
+period.  Note that for very active sites, this value should be fairly accurate
+since the rate calculation will be triggered more or less every 5 minutes, but
+for low volume sites the calculation may be calculated hours after the last
+request when someone new comes along.
+</p>
+
+</dd>
+
+
+
+<a name="WatchWhat"></a>
+<dt><span class="syntax">WatchWhat <span class="param">item ...</span></span></dt>
+<dd><span class="normal">Context: global</span>
+<p>
+mod_watch, by default, will collect information for the virtual host, file owner, and
+the server as a whole for each request made. For performance reasons,
+it might not be necessary to watch all these things. Specify one or more of the
+following to select which items to watch:
+</p>
+<ul><blockquote>
+<table border="0" cellspacing="3" cellpadding="0">
+<tr>
+	<td>all</td>
+	<td rowspan="7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td>nothing</td>
+</tr>
+<tr>
+	<td>virtual-host</td>
+	<td>virtual-host-by-port</td>
+</tr>
+<tr>
+	<td>file-owner</td>
+	<td>file-owner-by-port</td>
+</tr>
+<tr>
+	<td>remote-ip</td>
+	<td>remote-ip-by-port</td>
+</tr>
+<tr>
+	<td>server</td>
+	<td>server-by-port</td>
+</tr>
+<tr>
+	<td>headers-in <span style="color: #ff0000;">*</span></td>
+	<td>headers-out <span style="color: #ff0000;">*</span></td>
+</tr>
+<tr>
+	<td>content-length<span style="color: #ff0000;">*</span></td>
+	<td>&nbsp;</td>
+</tr>
+</table>
+</blockquote></ul>
+<p>
+The <span class="param">by-port</span> variants collect and separate the information
+according to the port number, instead of grouping all requests regardless of port.
+
+For example, <span class="param">virtual-host-by-port</span> would consider requests for
+http://www.snert.com/ different from https://www.snert.com/ and so would
+separate the information into "www.snert.com:80" and "www.snert.com:443".
+This also holds true if Apache is listening on other ports. Specifying both variants
+is allowed and would provide both a break down by port and the sum on all ports.
+</p>
+
+<p>
+Specifying <span class="param">all</span>, <span class="param">remote-ip</span>, or
+<span class="param">remote-ip-by-port</span> should
+be used with care as monitoring remote-IP addresses can generate large volumes of data
+and impact web server performance.  Note that the values of ifInOctets and ifOutOctets
+reflect data received from and sent to the remote-IP address.
+</p>
+
+<p>
+<span style="color: #ff0000;">[</span>
+Specifying <span class="param">headers-in</span> or <span class="param">headers-out</span>
+will add the length of the headers of the request and response to the
+ifInOctets and ifOutOctets counters repectively. These are not on by default,
+because Apache does not count them in the acceess log and may skew comparisions
+made between web log analysis tools and the MRTG data.
+<span style="color: #ff0000;">] *</span>
+</p>
+
+<p>
+<span style="color: #ff0000;">[</span>
+Specifying <span class="param">content-length</span> will count the value of
+the Content-Length header on POST requests.  Note however that this value can be
+falsified by malicious people in order to deliberately skew the graphs and
+so its value is suspect. There is no way to guarantee that a CGI or module
+actually read the input data.
+<span style="color: #ff0000;">] *</span>
+</p>
+
+<p class="warn">
+<span style="color: #ff0000;">*</span> Note these items will eventually be removed
+in favour of Apache 2.0 I/O filter API, which will allow mod_watch to count raw
+octets more accurately. Its implemented in 4.0, but considered experimental.
+</p>
+</dd>
+</dl>
+
+<a name="Installation"></a>
+<h3>Installation</h3>
+<ol>
+<li><p>
+Download either:
+</p>
+<ul>
+<li><a href="CHANGES.TXT">Change Log.</a></li>
+<li><a href="LICENSE.TXT">License, Disclaimer, and Support</a></li>
+<li><a href="http://www.snert.com/Software/download/mod_watch318.tgz">mod_watch318.tgz</a> for <b>Apache 1.3</b> <nobr>(<a href="http://www.snert.com/Software/mod_watch-3.18/">see its documention</a>)</nobr></li>
+<li><a href="http://www.snert.com/Software/download/mod_watch403.tgz">mod_watch403.tgz</a> for <b>Apache 2.0</b></li>
+<li><a href="http://www.mrtg.org/">MRTG: Multi-Router Traffic Grapher</a></li>
+</ul>
+</li>
+
+
+<li>
+<p>
+Before building mod_watch, please review and alter the
+configuration settings found at the top of
+<code>Makefile.dso</code>.
+</p>
+<p>To build as a shared library for <b>Apache 2.0</b>:
+
+<blockquote>
+<pre>
+cd (path to)/mod_watch-4.3
+make -f Makefile.dso install
+</pre>
+</blockquote>
+</li>
+
+<li>
+<p>
+To build as a static module into <b>Apache 2.0</b>:
+</p>
+<blockquote>
+<pre>
+cd (path to)/apache_2.0.43
+mkdir -p modules/com/snert
+mv (path to)/mod_watch-4.3 modules/com/snert/watch
+./buildconf			# This step can take a long time.
+./configure \
+    --enable-watch=static \
+    ... (your other configuration options) ...
+make install
+</pre>
+</blockquote>
+</li>
+
+<li>
+<p>
+In both dynamic and static installations, the Makefile will install the
+following scripts into <code>/usr/local/sbin</code> (see SCRIPTDIR in the
+Makefile.dso, Makefile.in, or Makefile):
+</p>
+
+<blockquote class="normal">
+<a href="apache2mrtg.html">apache2mrtg.pl</a>,
+<a href="mod_watch.html">mod_watch.pl</a>
+</blockquote>
+</li>
+
+<a name="HttpdConf"></a>
+<li><p>
+The following must be added to the global server configuration
+within <code>httpd.conf</code> in order for <a href="mod_watch.html">mod_watch.pl</a>
+to work (without modification):
+</p>
+
+<blockquote>
+<pre>&lt;IfModule mod_watch.c&gt;
+  # Allows the URL used to query virtual host data:
+  #
+  #	http://www.snert.com/watch-info
+  #
+  &lt;Location /watch-info&gt;
+  SetHandler watch-info
+  &lt;/Location&gt;
+
+  # Allows the URL used to query file owner and web
+  # server data:
+  #
+  #	http://www.snert.com/~achowe/watch-info
+  #	http://www.snert.com/~SERVER/watch-info
+  #
+  &lt;LocationMatch "^/~.+/watch-info$"&gt;
+  SetHandler watch-info
+  &lt;/LocationMatch&gt;
+
+  # Intended for debugging and analysis of shared memory
+  # hash table and weenie files:
+  #
+  #	http://www.snert.com/watch-table
+  #
+  &lt;Location /watch-table&gt;
+  SetHandler watch-table
+  &lt;/Location&gt;
+&lt;/IfModule&gt;
+</pre>
+</blockquote>
+</li>
+
+<li><p>
+Use <a href="apache2mrtg.html">apache2mrtg.pl</a> to parse the
+httpd.conf file to create an MRTG configuration script for all the
+defined virtual hosts.  The output can be appended to or included in an
+existing <code>mrtg.cfg</code> file.  There currently is no support to
+generate MRTG configurations for virtual hosts derived from
+mod_vhosts_alias or local user names.
+</p>
+<blockquote>
+<pre>
+perl apache2mrtg.pl (path to)/httpd.conf &gt;web.cfg
+</pre>
+</blockquote>
+<p>
+Use this generated configuration with MRTG for a cron job that executes regularly
+to generate the graphs (see MRTG installation documentation).  This configuration
+will periodically make calls to <a href="mod_watch.html">mod_watch.pl</a> to obtain
+the MRTG target name, uptime, bytes in &amp; out, requests in, and documents out.
+</p>
+</li>
+
+<li><p>
+Stop/start the web server:
+</p>
+<blockquote>
+<pre>
+apachectl stop; apachectl start
+</pre>
+</blockquote>
+<p>
+Please note that "apachectl restart" does not always appear to load correctly
+a DSO module that uses shared memory and semaphores. For this reason it is recommended
+that you stop/start the web server instead.
+</p>
+</li>
+
+<li><p>
+Unpack and install MRTG if you intend to use it for making the pretty graphs.
+</p></li>
+
+<li><p>
+Once the Apache web server starts receiving requests, you can use the
+watch-table handler to verify that things are being counted and if
+MRTG is properly configured, you should be able to view assorted graphs concerning data
+transfer rates of virtual hosts, file owners, and the web server.
+</p>
+</li>
+</ol>
+
+
+<a name="Notes"></a>
+<h3>Notes</h3>
+
+<ul>
+<li><p class="warn">Please take note of the <a href="CHANGES.TXT">change Log for 4.1</a>, in
+particular the reference to the "unix.shm.patch.diff" that should be applied to Apache 2.0 until
+such time as a permanent fix is included for bug #16056 in a future release of Apache 2.0. The
+patch is included with the mod_watch/4.3 source distribution.
+</p></li>
+
+<li><p>Sample MRTG output &amp; configurations for:</p>
+<dl>
+<dt><span class="normal"><a href="http://www.snert.com/mrtg/html/www.snert.com.html">Octets In &amp; Out</a></span></dt>
+<dd><span class="normal">The follow MRTG configuration is produced by
+<a href="apache2mrtg.html">apache2mrtg.pl</a>:</span>
+<p style="text-align: left">
+Title[www.snert.com]: www.snert.com Data Traffic
+<br>Target[www.snert.com]: `/usr/local/sbin/mod_watch.pl http://www.snert.com/watch-info`
+<br>MaxBytes[www.snert.com]: 1250000
+<br>PageTop[www.snert.com]: &lt;h2&gt;www.snert.com Data Traffic&lt;/h2&gt;
+</p>
+</dd>
+
+<dt><span class="normal"><a href="http://www.snert.com/mrtg/html/www.snert.com,req.html">Requests &amp; Documents</a></span></dt>
+<dd><span class="normal">The following MRTG configuration was done by hand to produce Request &amp;
+Document traffic:</span>
+
+<p style="text-align: left">
+Options[www.snert.com,req]: growright, perhour
+<br>Title[www.snert.com,req]: www.snert.com Request &amp;amp; Document Traffic
+<br>Target[www.snert.com,req]: `/usr/local/sbin/mod_watch.pl -f ifRequests,ifDocuments http://www.snert.com/watch-info`
+<br>MaxBytes[www.snert.com,req]: 1250000
+<br>PageTop[www.snert.com,req]: &lt;h2&gt;www.snert.com Request &amp;amp; Document Traffic&lt;/h2&gt;
+<br>YLegend[www.snert.com,req]: Hits per Hour
+<br>ShortLegend[www.snert.com,req]: H/h
+<br>Legend1[www.snert.com,req]: Requests (raw hits) received per Hour
+<br>Legend2[www.snert.com,req]: Documents sent per Hour
+<br>Legend3[www.snert.com,req]: Maximal 5 Minute Incoming Request Traffic
+<br>Legend4[www.snert.com,req]: Maximal 5 Minute Outgoing Document Traffic
+<br>LegendI[www.snert.com,req]: &amp;nbsp;Hits:
+<br>LegendO[www.snert.com,req]: &amp;nbsp;Docs:
+</p>
+</dd>
+</dl>
+</li>
+
+<li><p>
+mod_watch/4 for <b>Apache 2.0</b> has been built and/or tested on the following
+platforms:
+</p>
+
+<ul>
+<li><p>Cobalt Qube 1, RedHat Linux 5.1, Apache 2.0.43</p></li>
+</ul>
+
+</li>
+
+<li><p>
+Help in <a href="http://www.linux-sottises.net/mrtg.php">French</a> &amp; <a href="http://www.linux-sottises.net/en_mrtg.php">English</a> for MRTG and mod_watch.
+</p></li>
+
+<li><p>
+Thank you to the folks at <a href="http://www.securityspace.com/s_survey/data/index.html">
+Security Space</a> for including mod_watch in their
+monthly Apache Module Report.
+</p>
+</li>
+
+<li><p>
+<span class="syntax">ifOutRate</span> introduced in 3.14 is experimental and subject to change.
+</p></li>
+
+<li><p>
+<a href="http://www.gknw.de/development/apache/">Novel NetWare and Windows builds</a>.
+Please contact Guenter Knauf via his site for all support issues concerning these
+builds.
+</p></li>
+</ul>
+
+<!--#include file="license-body.html" -->
+
+<br>
+
+<p style="text-align: center;">
+<a href="apache2mrtg.shtml">apache2mrtg.pl</a>
+- <a href="index.shtml">mod_watch</a>
+- <a href="mod_watch.shtml">mod_watch.pl</a>
+<br>
+<a href="http://www.snert.com/">Welcome</a>
+- <a href="http://www.snert.com/Software/index.html">Software</a>
+</p>
+
+
+<!-- copyright -->
+<p class="copyright" style="text-align: center;">
+<nobr>Copyright 2001, 2003 by
+<a href="javascript:achowe()">
+Anthony C Howe</a></nobr>
+<nobr>All rights reserved.</nobr>
+</p>
+<!--end copyright-->
+
+<p class="small" style="text-align: center;">
+<!--#include virtual="/WIL/counter.pl/Software/mod_watch/version4.cnt" -->
+light bulbs since 19 January 2003
+</p>
+
+<!-- END PAGE BODY -->
+
+	</td>
+</tr>
+</table>
+
+<!-- END MARGINS -->
+
+</body>
+</html>

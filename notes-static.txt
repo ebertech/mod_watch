@@ -1,0 +1,15 @@
+Now please do the following:
+
+  cd $(APACHEDIR)
+  ./Configure \
+     (your options here) \
+     --activate-module=src/modules/watch/libwatch.a \
+     --disabled-shared=watch
+  make install
+  apachectl restart
+
+The following directive has to be added along side similar
+directives, typically found near the top of the httpd.conf file:
+
+  AddModule mod_watch.c
+

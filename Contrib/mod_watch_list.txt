@@ -1,0 +1,201 @@
+mod_watch_list.pl
+=================
+  When mod_watch was initially released, it came with a wondrous perl
+script called "mod_watch.pl" which obtained statistic information from
+mod_watch via an HTTP request.  This script "did the job" for it's time,
+but had one major caveat: it needed to be run once per Apache virtual host
+being monitored with mod_watch.
+
+  With the release of mod_watch 3.14, the "watch-list" handler was added.
+This handler directly addressed the aforementioned issue, now returning all
+statistics for all Apache virtual hosts being monitored with only one HTTP
+request.  This would provide faster turn-around times for host statistics,
+as well as be a lot more friendly towards the HTTP server.
+
+  However, the original "mod_watch.pl" script did not make use of this
+new addition.  Also, the "mod_watch.pl" script had some other issues
+which I personally found to be un-suiting for my own server environment:
+
+  * The code was written based on perl4, where perl5 was today's standard.
+  * There was no I/O error handling.
+  * There was no I/O timeout, resulting in the script waiting virtually
+    forever in the case that the Apache server was offline.
+  * No support for non-mrtg applications such as RRDtool or home-brewn
+    monitoring suites.
+
+  Therefore, the "mod_watch_list.pl" script was born.
+
+
+REQUIREMENTS
+============
+  * mod_watch 3.14 or higher.  PREVIOUS VERSIONS WILL NOT WORK!
+  * perl5, version 5.002 or higher.  Untested with perl6.
+  * IO::Handler perl module.  This comes with stock perl5.
+  * IO::Socket perl module.  This comes with stock perl5.
+
+  Administrators should note that future versions of this application
+will more than likely require an additional module:
+
+  * libwww-perl.  http://www.linpro.no/lwp/
+
+  This module will ensure that "mod_watch_list.pl" does 100% proper HTTP
+requests, and will also add proxy support, as well as numerous other
+features.  As it stands (version 1.01), libwww-perl is not required.
+
+
+OPTIONS
+=======
+  "mod_watch_list.pl" has numerous options to assist administrators in
+their task of properly monitoring -- and graphing -- the I/O statistics
+their web servers:
+
+  --fetch=<URL>
+
+    Fetches the "watch-list" data for all of the Apache virtual hosts being
+    monitored with mod_watch, from the <URL> specified.  Currently, only
+    HTTP is supported; using any other protocol will have undefined results.
+
+      ***
+      *** NOTE: <URL> should be the actual URL of the watch-list
+      ***       handler location.  In most cases, this is:
+      ***
+      ***       http://<YOUR-WEB-SERVER>/watch-list
+      ***
+
+    Output will be sent to STDOUT, formatted as space-delimited data as
+    specified from the mod_watch module.
+
+
+  --dump=<HOST>
+
+    Dumps statistic information for <HOST> to STDOUT.  This can be used
+    to single out a specific host and check it's counter information.
+    Essentially this does the same thing as a grep for <HOST>.
+
+    Input is read from STDIN.
+
+    Only one (1) <HOST> is permitted; do not try to use more than one.
+
+    The output is formatted as space-delimited data, in a format that
+    is defined by the mod_watch module itself.  The format is documented
+    here:
+
+      http://www.snert.com/Software/mod_watch/#WatchStorage
+
+
+  --mrtg=<HOST>
+
+    Outputs MRTG-formatted statistic information for <HOST> to STDOUT.  This
+    should be used within MRTG configuration files (mrtg.cfg) to fetch
+    information from each Apache virtual host.
+
+    Only one (1) <HOST> is permitted; do not try to use more than one.
+
+    Input is read from STDIN.
+
+
+  --fields=<FIELD1,FIELD2>
+
+    Specify which mod_watch fields to output.  Honestly, I haven't tested
+    these very thoroughly, so please be careful using them.
+
+    FIELD1 is considered input, and FIELD2 output.  The defaults are
+    "inOctet" and "outOctet," respectively.
+
+    As of "mod_watch_list.pl" 1.01, the following fields are available:
+
+      ifName ifUptime ifInOctets ifOutOctets ifRequests ifDocuments
+      ifActive ifOutRate periodOctets periodMarker
+
+    Please keep an eye on mod_watch's documentation to see if new fields
+    will be added.  The URL for that documentation is:
+
+      http://www.snert.com/Software/mod_watch/#WatchStorage
+
+
+  --timeout=<VALUE>
+
+    Specify an I/O timeout value for the HTTP request.  <VALUE> is the
+    number of seconds to wait before a timeout.  The default is 30 seconds.
+
+
+  All other options should be self-explanatory.  Use the --help flag to
+  get information if desired.
+
+
+HOW TO USE
+==========
+  In this example, we will assume that our web-server is named "zebra,"
+and that we will be using MRTG to graph our Apache virtual hosts' I/O
+statistics.  Let's also pretend that we have two (2) Apache virtual hosts
+being monitored by mod_watch: "www.mystuff.com" and "www.snert.com":
+
+  First, we download the "watch-list" data from zebra, and store the
+information on the local file system for later use.  This is necessary,
+since the "mod_watch_list.pl" script relies on this information to
+properly read and output the counters for each virtual host.
+
+$ cd /web
+$ rm -f data.txt
+$ mod_watch_list.pl --fetch=http://zebra/watch-list > data.txt
+
+  The next step is to use the --mrtg option to provide MRTG-formatted
+counter data to MRTG itself.  Those of you familiar with MRTG should
+already have some idea how to do this, but for those of you who aren't,
+know that you can call an external application from MRTG which returns
+the information desired -- rather than go through the SNMP protocol.
+
+  So, inside of our mrtg.cfg file, we would have the following:
+
+Target[www.mystuff.com]: `/web/mod_watch_list.pl --mrtg=www.mystuff.com < /web/data.txt`
+Target[www.snert.com]: `/web/mod_watch_list.pl --mrtg=www.snert.com < /web/data.txt`
+
+  This will force MRTG to call the "mod_watch_list.pl" script and fetch the
+proper data for each Apache virtual host from "/web/data.txt".  At this point,
+run mrtg(1) and graph your statistics.  Wait 5 minutes, and execute the
+commands again.  After a few iterations, you should see results.
+
+  If you wish to do all of this periodically (as most of us do), feel free
+to make a small sh(1) script which calls --fetch before calling mrtg(1).
+
+  It's all very simple, and very logical.  And all with only one HTTP
+request.  :-)
+
+
+BUG REPORTS
+===========
+  I have found that in the open-source world, many authors believe that
+since the source-code is available, that end-users should fix the bugs
+themselves.  This is a self-defeating attitude, and does not provide any
+positive benefits for end-users or administrators relying on other peoples'
+software.  I cannot imagine commercial E-commerce companies having to
+tell their customers, "Sorry, we can't fix your web-site because the code
+isn't ours."
+
+  Therefore, I believe in taking bug reports very seriously.  I believe in
+taking full responsibility for my software, and likewise expect you will
+take full responsibility for your systems.  It's a mutually-exclusive
+relationship.
+
+  Please submit all bugs or change requests to me personally via Email.
+
+
+LICENSE AGREEMENT
+=================
+  For licensing information, see LICENSE.txt which comes with mod_watch.
+
+
+AUTHOR
+======
+  Jeremy Chadwick <software@jdc.parodius.com.NOSPAM>.
+
+
+VERSION HISTORY
+===============
+  1.02  -  Copyright/author modifications, and small cosmetical details.
+  1.01  -  Properly handle hosts which do not exist in the data file.
+           Zero (0) byte counters are returned for such hosts.
+  1.00  -  Initial release.
+
+
+_EOF_

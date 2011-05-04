@@ -1,0 +1,24 @@
+In both dynamic and static installations, remember to add the 
+following to the httpd.conf file as part of the server's global
+configuration:
+
+  <IfModule mod_watch.c>
+    # Allows the URL used to query virtual host data:
+    #
+    #	http://www.snert.com/watch-info
+    #
+    <Location /watch-info>
+    SetHandler watch-info
+    </Location>
+
+    # Allows the URL used to query file owner and web
+    # server data:
+    #
+    #	http://www.snert.com/~achowe/watch-info
+    #	http://www.snert.com/~SERVER/watch-info
+    #
+    <Location /~*/watch-info>
+    SetHandler watch-info
+    </Location>
+  </IfModule>
+

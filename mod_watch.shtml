@@ -1,0 +1,151 @@
+<html>
+<head>
+<title>
+Snert . Com - Software - mod_watch.pl
+</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script language="JavaScript" type="text/javascript" src="./mailto.js"></script>
+<link rel="stylesheet" type="text/css" href="./style.css">
+</head>
+
+<body background="Img/bg.gif" bgcolor="#ffffff" text="#000000" link="#0000ff" vlink="#000080" alink="#ff00ff">
+
+<!-- MARGINS -->
+<table cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr>
+	<td rowspan="2" width="120">&nbsp;</td>
+	<td width="250"><img alt="Snert . Com" src="Img/sun.gif" width="105" height="103"></td>
+	<td align="left">
+		<span class="title">mod_watch.pl</span>
+		<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<span class="plain">from</span>&nbsp;&nbsp;
+		<span class="snert">Snert . Com</span>
+	</td>
+	<td rowspan="2" valign="top" align="right" width="60">&nbsp;</td>
+</tr><tr>
+	<td colspan="2">
+<!-- PAGE BODY -->
+
+<h2 align="center">An MRTG Target Interface Script</h2>
+
+<p style="text-align: center;">
+<a href="apache2mrtg.shtml">apache2mrtg.pl</a>
+- <a href="index.shtml">mod_watch</a>
+- <a href="mod_watch.shtml">mod_watch.pl</a>
+<br>
+<a href="http://www.snert.com/">Welcome</a>
+- <a href="http://www.snert.com/Software/index.html">Software</a>
+</p>
+
+<a name="Syntax"></a>
+<h3>Syntax</h3>
+
+<p>
+<span class="syntax">mod_watch.pl [-f in,out] url</span>
+</p>
+
+<table style="padding-left:40px">
+<tr valign="top">
+	<td>
+		-f in,out
+	</td>
+	<td>
+		Pair of fields returned for In &amp; Out values. Defaults are
+		ifInOctets &amp; ifOutOctets. Possible fields are:
+		<blockquote>
+		<table border="0" cellspacing="0" cellpadding="0">
+		<tr align="left">
+			<th>Name</th>
+			<td rowspan="7">&nbsp;&nbsp;&nbsp;</td>
+			<th>Type</th>
+			<td rowspan="7">&nbsp;&nbsp;&nbsp;</td>
+			<th>Description</th>
+		</tr>
+<tr>
+	<td>ifInOctets</td><td>32-bit Counter</td><td>bytes received from requests (except chunked input)</td>
+</tr>
+<tr>
+	<td>ifOutOctets</td><td>32-bit Counter</td><td>bytes sent in response to requests</td>
+</tr>
+<tr>
+	<td>ifRequests</td><td>32-bit Counter</td><td>number of requests (raw hits) received</td>
+</tr>
+<tr>
+	<td>ifDocuments</td><td>32-bit Counter</td><td>number of documents sent</td>
+</tr>
+<tr>
+	<td>ifActive</td><td>16-bit Signed</td><td>number of active (concurrent) connections</td>
+</tr>
+<tr>
+	<td>ifOutRate</td><td>Float</td><td>approx. 5 minute average of octets out per second</td>
+</tr>
+		</table>
+		</blockquote>
+	</td>
+</tr>
+<tr valign="top">
+	<td>url</td><td>The database key to get or set a value.</td>
+</tr>
+</table>
+
+<a name="Description"></a>
+<h3>Description</h3>
+
+<p>
+Fetch the current counters associated with the given URL. The URL refers
+to either a virtual host, file owner, the SERVER, or <a href="index.shtml#WatchSpoolFile">spool-file</a> for a &lt;Directory&gt; or &lt;Location&gt;.   For example:
+</p>
+<blockquote>
+<a href="http://www.snert.com/watch-info">http://www.snert.com/watch-info</a>
+<br><a href="http://www.snert.com/~achowe/watch-info">http://www.snert.com/~achowe/watch-info</a>
+<br><a href="http://www.snert.com/~SERVER/watch-info">http://www.snert.com/~SERVER/watch-info</a>
+<br><a href="http://www.snert.com/~mod_watch.dat/watch-info">http://www.snert.com/~spool_file/watch-info</a>
+</blockquote>
+
+<p>
+The mod_watch handler "watch-info" returns a line of plain text
+containing the following space separated fields:
+</p>
+
+<blockquote>
+<tt>ifName ifUptime ifInOctets ifOutOctets ifRequests ifDocuments ifActive ifOutRate</tt>
+</blockquote>
+
+<p>
+The script then returns output suitable for MRTG's target script command
+directive: line with the input bytes, line with the output bytes, line
+with the web server uptime, and the target name.
+</p>
+
+<!--#include file="license-body.html" -->
+
+<br>
+
+<p style="text-align: center;">
+<a href="apache2mrtg.shtml">apache2mrtg.pl</a>
+- <a href="index.shtml">mod_watch</a>
+- <a href="mod_watch.shtml">mod_watch.pl</a>
+<br>
+<a href="http://www.snert.com/">Welcome</a>
+- <a href="http://www.snert.com/Software/index.html">Software</a>
+</p>
+
+
+<!-- copyright -->
+<p class="copyright" style="text-align: center;">
+<nobr>Copyright 2001, 2003 by
+<a href="javascript:mailto('achowe at snert dot com')">
+Anthony C Howe</a></nobr>
+<nobr>All rights reserved.</nobr>
+</p>
+<!--end copyright-->
+
+<!-- END PAGE BODY -->
+	</td>
+</tr>
+</table>
+
+<!-- END MARGINS -->
+
+</body>
+</html>

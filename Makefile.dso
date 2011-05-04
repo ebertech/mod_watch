@@ -1,0 +1,159 @@
+#
+# Makefile
+#
+# Copyright 2001, 2003 by Anthony Howe.  All rights reserved.
+#
+
+.POSIX:
+
+########################################################################
+### Pick one that best suits your system.
+########################################################################
+
+#
+# The location of apxs utility.
+#
+#APXS=/home/apache2/bin/apxs
+APXS=/usr/local/sbin/apxs
+
+#
+# The location of apachectl utility to stop/start/restart targets.
+#
+APACHECTL=apachectl
+
+#
+# Where the scripts should live
+#
+SCRIPTDIR=/usr/local/sbin
+
+#
+# Where to store the weenie files.
+#
+STATEDIR=/var/lib/mod_watch/
+
+#
+# Define to use unsigned long long counters.
+#
+#BIG=-DUSE_OCTET_COUNTER_64
+
+#
+# Extras
+#
+DEF=$(BIG) -DSTATEDIR='\"$(STATEDIR)\"'
+INC=
+LIB=
+
+########################################################################
+### No further configuration beyond this point.
+########################################################################
+
+.SUFFIXES:
+
+O = .lo
+A = .la
+
+.SUFFIXES: .c .h $O $A
+
+MODULE = watch
+VERSION = 4.2
+DYNAMIC = lib$(MODULE)$A
+
+MODULEDIR = $(APACHEDIR)/src/modules/$(MODULE)
+
+OBJ = mod_$(MODULE)$O Memory$O SharedHash$O NetworkTable$O
+SRC = mod_$(MODULE).c Memory.c SharedHash.c NetworkTable.c
+
+# Dynamic .c to relocatable .o
+.c$O:
+	$(APXS) -c $(DEF) $(INC) $<
+
+all:
+	@echo
+	@echo '***************************************************************'
+	@echo 'How to build mod_$(MODULE) for Apache 2.0'
+	@echo
+	@echo 'To build a DSO version of mod_$(MODULE) for Apache 2.0, first'
+	@echo 'verify the configuration at the top of the Makefile.dso then'
+	@echo 'type:'
+	@echo
+	@echo '  make -f Makefile.dso build'
+	@echo '  make -f Makefile.dso install'
+	@echo
+	@echo 'To build a static version of mod_$(MODULE) for Apache 2.0:'
+	@echo
+	@echo '  cd (path to)/apache_2.0.44'
+	@echo '  mkdir -p modules/com/snert'
+	@echo '  mv (path to)/mod_$(MODULE)-$(VERSION) modules/com/snert/$(MODULE)'
+	@echo '  ./buildconf'
+	@echo '  ./configure \'
+	@echo '      --enable-$(MODULE) \'
+	@echo '      ... (your other configuration options) ...'
+	@echo '  make install'
+	@echo
+	@echo '***************************************************************'
+	@echo
+
+settings:
+	@uname -a
+	@echo "CC=`$(APXS) -q CC`"
+	@echo "CFLAGS=`$(APXS) -q CFLAGS`"
+	@echo "CFLAGS_SHLIB=`$(APXS) -q CFLAGS_SHLIB`"
+	@echo "DEF=$(DEF)"
+	@echo "INC=`$(APXS) -q INCLUDEDIR`"
+	@echo "LIB=$(LIB)"
+
+build: mod_$(MODULE)$A
+
+mod_$(MODULE)$A: $(OBJ)
+	$(APXS) -c $(DEF) $(INC) $(LIB) $(OBJ)
+
+$(DYNAMIC): SharedHash$R NetworkTable$R
+
+SharedHash$R: Memory$R SharedHash.h SharedHash.c
+	$(APXS) $(DEF) $(INC) -c $*.c
+	$(AR) $(ARFLAGS) $(DYNAMIC) $@
+
+showhash: showhash.c
+
+$(SCRIPTDIR):
+	mkdir $(SCRIPTDIR)
+
+$(SCRIPTDIR)/mod_watch.pl: $(SCRIPTDIR) mod_watch.pl
+	chmod u+x mod_watch.pl
+	cp -f mod_watch.pl $(SCRIPTDIR)
+
+$(SCRIPTDIR)/apache2mrtg.pl: $(SCRIPTDIR) apache2mrtg.pl
+	chmod u+x apache2mrtg.pl
+	cp -f apache2mrtg.pl $(SCRIPTDIR)
+
+install: build $(SCRIPTDIR)/mod_watch.pl $(SCRIPTDIR)/apache2mrtg.pl
+	$(APXS) -i -a -n '$(MODULE)' mod_$(MODULE)$A
+	@echo
+	@echo '***************************************************************'
+	@cat notes-dynamic.txt
+	@cat notes-conf.txt
+	@echo '***************************************************************'
+	@cat notes-support.txt
+	@echo
+
+uninstall: clean
+	-rm -f $(SCRIPTDIR)/mod_watch.pl $(SCRIPTDIR)/apache2mrtg.pl
+	-rm -f `$(APXS) -q LIBEXECDIR`/mod_$(MODULE).so
+
+clean:
+	-rm -f ./*.o ./*$O ./*$A ./*.slo $(DYNAMIC) showhash
+	-rm -rf .libs
+
+distclean: clean
+
+start:
+	$(APACHECTL) start
+stop:
+	$(APACHECTL) stop
+
+reload: stop start
+
+test: reload
+	lynx http://127.0.0.1/watch-info
+
+

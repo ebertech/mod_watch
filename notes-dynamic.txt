@@ -1,0 +1,10 @@
+For dynamic installation, the Makefile uses apxs to install 
+mod_watch.so, which also inserts the required LoadModule and 
+AddModule lines into the httpd.conf file.
+
+Once the configuration below has been added, you can stop/start
+the Apache server:
+
+  apachectl stop
+  apachectl start
+  

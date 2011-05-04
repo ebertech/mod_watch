@@ -1,0 +1,714 @@
+CHANGES
+-------
+
+The major number changes for such things as code rewrites, changes in
+syntax, and/or dramatic changes in functionality. The minor number
+changes for corrections, enhancements, etc. made to the code. There
+is no set schedule for releases.
+
+--TODO--
+
+   +	Enhancement request: add counters for HTTP status code families
+   	(ie. 100-199, 200-299, 300-399, 400-499, 500-599).
+
+   +	Enhancement request: allow specifying WatchDocuments by
+   	<VirtualHost>, <Directory>, or <Location>.
+
+   +	Apache 2.0 issue: figure out how to install support scripts through
+   	the config.m4 mechanism, since the Makefile.in technique might not
+   	be 100% reliable.
+
+--4.3--
+
+   !	mod_watch.c: watchPreConfig() failed to verify that the STATEDIR
+   	macro has a trailing slash (/). When overridden from within the
+   	Makefile.dso, some people may forget the trailing slash, which
+   	can produce subsequently unusual behaviour concerning the creation
+   	of directories and weenie files. Reported by Frank Thomson
+   	<fjt99 at hotmail dot com>.
+
+   !	SharedHash.c: Fixed shStore() to always set the file ownership of
+   	the weenie file to that of the Apache child process (even when
+   	execute from the parent root-owned process). This was an inadvertant
+   	change as a result of the port from Apache/1.3. Reported by
+   	Frank Thomson <fjt99 at hotmail dot com>.
+
+  ***	Thank you to Steve Gare <admin at xantara dot co dot uk> for the
+  	kind DVD gift he sent. It is well appreciated and shall help some
+  	what with my cravings for movies.
+
+--4.2--
+
+   !	mod_watch.c: replace mod_vhost_alias detection with a new directive
+   	WatchDynamicVirtualHost, since there can be more modules that implement
+   	dynamic vhost support than I can auto-detect.  This flag will be off
+   	by default unless mod_vhost_alias or mod_vd are loaded, in order to
+   	disable unnecessary tests in a classic static vhost setup.
+
+   !	mod_watch.c: watchInfoLine() incorrectly computes the uptime, because
+   	of mismatched scales of time. This is a porting bug from Apache 1.3 to
+   	Apache 2.0, where the time_t in seconds was replaced with apr_time_t
+   	in microseconds. Apache 1.3 version of mod_watch is not affected.
+   	Reported by Steve Gare <admin at xantara dot co dot uk>
+
+  ***	BTW I wish you people using my software would start sending DVDs
+	from my wishlist as a gesture of thanks for the all the work I put
+	into this stuff. It very depressing that everyone asks me for help
+	of one form or another, but no one cares about giving gestures of
+	thanks for ANY of my modules. In three years I've received 7 DVDs
+	and one computer game from people to say thank you for my work.
+	Compared with the number of visits, downloads, installations, and
+	emails I've seen this is just not fair.
+
+--4.1--
+
+   !	mod_watch.pl: Changed error report to return HTTP error text instead
+   	of $! if defined.
+
+   !	mod_watch.pl: Added fix for Perl 5.8.0 concerning how an IP address
+   	is should be passed to socket functions. Reported by Diego Condesse.
+
+   !	mod_watch.c, SharedHash.[ch]: Add compile time support for unsigned
+   	long long counters: -DUSE_OCTET_COUNTER_64. By default unsigned long
+   	is used. Requested by Boris Hajduk <boris at carpediem dot fr>.
+
+   !	mod_watch.c: fixed error log message, incorrect reference to watchInit
+   	instead of watchPostConfig.
+
+   !	SharedHash.c: Removed shared memory hack in favour of Apache 2.0.44
+   	source code patch. Has been submitted to Apache development team to
+   	address Apache APR bug #16056. In the mean while please apply the
+   	supplied patch "unix.shm.patch.diff".
+
+   !	mod_watch.c:  With support for IPv6, the port separator character has
+   	been changed from a colon (:) to a comma (,) since colon and dot are
+   	valid in an IPv6 address syntax.
+
+   !	Location of /var/spool/mod_watch has changed, cause I learnt something
+   	new about the intended purpose of traditional and Linux file hierarchy
+   	from http://www.pathname.com/fhs/, which had never been explained to me
+   	in the past.
+
+   	So now /var/spool/mod_watch will move to /var/lib/mod_watch and will
+   	have a subdirectory intended to hold all the weenie files associated
+   	with IP addresses. So the new layout will look like this:
+
+   		/var/lib/mod_watch/
+   			SERVER(,\d+)?
+   			[\w.-]+(,\d+)?
+   			ip/[[:xdigit:]:.]+(,\d+)?
+
+   	The use of an ip/ directory will make it easier for sys.admins. to
+   	use and clean-up after remote-ip and remote-ip-by-port that generate a
+   	large number of files.
+
+   	WatchSpoolDirectory and WatchSpoolFile have been renamed (aliases are
+   	in place for now) to WatchStateDirectory and WatchStateFile to better
+   	reflect their use.
+
+   	Also note that this impacts watch-info URLs for MRTG that query IP
+   	addresses. For example before you'd say something like:
+
+   		http://www.snert.com/~123.45.67.89/watch-info
+
+   	Now you'll say:
+
+   		http://www.snert.com/~ip/123.45.67.89/watch-info
+
+   	Essentially everything between the tilde (~) and the "/watch-info"
+   	is used as the target name. This will require a slight modification
+   	to httpd.conf. Previously the rule was:
+
+		<Location /~*/watch-info>
+		SetHandler watch-info
+		</Location>
+
+	But now the rules should be something like below.  There are
+	other ways to express this, but this should cover all cases:
+
+	        <LocationMatch "^/~.+/watch-info$">
+	        SetHandler watch-info
+	        </LocationMatch>
+
+	This of course assumes you use the tilde URL form of watch-info and
+	that you are using WatchWhat remote-ip. If not then you can just add
+	it to the httpd.conf commented out instead (just in case you do need
+	it later).
+
+--4.0--
+
+   +	Initial Apache 2.0 release. NOTE that the 3.x series will be
+   	maintained for a while longer, though I can't say how long,
+   	(probably upto the point I switch to using Apache 2 full-time).
+
+   +	Added framework files necessary to integrate the module
+   	into the Apache 2.0 module source tree. Necessary when building
+   	as a static module.
+
+   +	Rename Makefile to Makefile.dso to avoid being replaced by the
+   	Apache 2.0 configure script when integrated into the Apache
+   	module source tree.
+
+   +	Should be thread safe (though I think it already was) though it
+   	has NOT been tested in such an environment yet.
+
+   !	NetworkTable.*: WatchNetwork should now be able to support IPv6
+   	thanks to the Apache 2 APR library.  NOTE that I have no means to
+   	test this, so please report all issues. Also note that the
+   	WatchNetwork list is NOT sorted any more. The order that networks
+   	are added will be the order in which they'll be tested.
+
+   !	mod_watch.c: Added input/output filters to count raw octets. This
+   	code modelled on mod_logio.c. Thank you to Günter Knauf
+   	<gk at gknw dot de> for the really obscure tip.
+
+   	This should mean that BOTH ifOctetsIn and ifOctetsOut are more
+   	accurate and will remove the need for WatchWhat items headers-in,
+   	headers-out, and content-length. They're still present in 4.0, until
+   	I'm satisfied that I don't have to go back to old ways; they will
+   	eventually go away.
+
+   !	mod_watch.c: WatchNotLogged is repalced by WatchLogAll and by
+   	default false.
+
+   -	Time.*, Mutex.*, Shared.*: Dropped in favour of the Apache 2 APR
+   	library.
+
+   -	mod_watch.c: WatchStorage dropped in favour of just using the
+   	shared memory hash table all the time, which is the more efficient
+   	means of storage. The "files" technique was more of a debugging
+   	tool and a carry-over from series 1 and 2.
+
+   -	mod_watch.c: Merged the watch-copyright handler into the watch-table
+   	handler instead. Most people give me access to the watch-table
+   	handler when they need help, so that seemed a better place to put
+   	it.
+
+ ***	SharedHash.c: There is an issue concerning APR shared memory support
+ 	for System V where the APR fails to setup the access permissions
+ 	correctly so that Apache child processes, which change their uid/gid,
+ 	they can properly access anonymous shared memory. I've added a hack
+ 	until such time that either the APR is fixed or clear documentation
+ 	on how this aspect of the APR is ment to be used is provided by Apache.
+
+--3.19--
+
+   +	Once again Stephane HERMET <hermet at narrowstream dot net> is
+   	the first to tell me the day after the 3.18 release that _HE_ reads
+   	the change log and that in fact he's a guy, not a gal. My apologies
+   	for the inadvertant sex change.
+
+--3.18--
+
+   +	mod_watch.pl: I've been trying to figure out for the longest
+	while what causes spikes in MRTG when Apache is offline. I
+	finally figured out what causes it. When the Apache server is
+	offline mod_watch.pl returns zero values to MRTG. MRTG sees
+	this as a rollover condition and calculates the difference from
+	the last known value to the current value and voila - a spike
+	where none should be. So instead of returning zero values, I
+	now return empty lines, which MRTG is treated as NAN.
+
+	I've confirmed this with one of the authors of MRTG, Tobias Oetiker
+	<etiker at ee dot ethz dot ch>.
+
+   +	mod_list_list.pl, mod_list_list.txt: Author added documentation
+   	and some minor cosmetic changes.
+
+   +	Stephane HERMET <hermet at narrowstream dot net> was the first
+   	to tell me the day after the 3.17 release that she does indeed
+   	read the log. Thank you Stephane for the moral support.
+
+	Also Joe Huss <detain at interserver dot net> sent encouraging
+	words of support and that he too reads the change log.
+
+	Thank you.
+
+   !	LICENSE.TXT: further refinements and clarifications.
+
+   !	Added OpenBSD 3.2 configuration to the Makefile.
+
+--3.17--
+
+   !	mod_watch.c: Added "content-length" option for WatchWhat. Only
+   	count the Content-Length header towards the ifInOctets
+   	on a POST request. This header can easily be falsified by a
+   	malicious person by hand in order to spike the graph and so its
+   	value is now considered suspect. I believe MRTG does guard against
+   	this for the most part, but in theory carefully choosen values
+   	could be used that are just beneath threshold.
+
+   !	Mutex.c: union semun issues - changed #if conditionals closer to 3.15
+   	since this appears to cover a larger set of platforms using GCC than
+   	3.16.  Linux systems define __GNU_LIBRARY__ and _SEM_SEMUN_UNDEFINED
+   	optionally based on union semun being defined or not, while BSD
+   	systems use GCC, but not the library (or they've changed it) so
+   	that __GNU_LIBRARY__ is undefined, YET they define union semun. Too
+   	bad there is no __BSD__ family macro (grrr).
+
+   +	Add Contrib directory: mod_watch_list.pl
+
+   +	BTW does anyone read this?
+
+--3.16--
+
+   +	mod_watch.c, SharedHash.*: externalised shFlushAll for use with
+   	a new handler called "watch-flush", which allows people to write
+   	scripts that can force mod_watch to save all data to disk without
+   	restarting Apache, then the script can perform data backup.
+
+   !	Mutex.c: Added more #if conditional expressions for that stupid
+   	"union semun" definition.  If someone reads this and has a
+   	definitive way to test whether this code should be included or
+   	not that would be very handy.
+
+--3.15--
+
+   !	Mutex.c: Some systems type check the 4th argument of semctl(),
+   	which is that stupid ugly "union semun". I had previous just
+   	placed the specific type the operation expected in for the
+   	argument, which avoided the ugliness of whether to include or
+   	define "union semun" (stupid XOPEN), but some compilers don't
+   	like it. Now I explicitly use "union semun" to shut them up.
+   	Reported by Benji Spencer <spunge at spunge dot org>.
+
+--3.14--
+
+   !	mod_watch.c: Fix "hash skew", where the indexes are skewed by one
+   	entry from optimal when viewed in the watch-table. This was a
+   	problem in watchContentTable() where the hash value was computed
+   	and saved to a variable within a function call argument list and
+   	the same variable was subsequently used further along in the
+   	function call argument list. This assumes that the argument list
+   	is evaluated in left-to-right order, which is NOT always the
+   	case.
+
+   !	mod_watch.c: watchPost() fixed incorrect watch_what test for
+   	WATCH_REMOTE_IP_BY_PORT
+
+   +	Add the ability to count/gauge concurrent requests, ifActive, for
+   	mod_throttle/4.0.  Added a new field ifOutRate counter/gauge that
+   	maintains the average transmission rate for mod_throttle/4.0. THE
+   	TECHNIQUE USED FOR COMPUTING ifOutRate IS CURRENTLY EXPERIMENTAL
+   	AND SUBJECT TO CHANGE. watch-info format altered to add new fields.
+   	Note to stop the server and use nfield.pl to add new fields,
+   	depending on which experimental technique is being used.
+
+   +	mod_watch.pl: added new fields ifActive and ifOutRate, I suspect
+   	they'll have little utility for MRTG.
+
+   -	index.shtml: Remove comments about IPv6 for WatchNetwork since
+   	it appears I have NO CLUE how IPv6 is structured.
+
+   +	mod_watch.c: Add pointer to license and disclaimer text for
+   	the watch-copyright handler. Based on concerns raised by
+   	<paul at it dot ca> as how best to comply with all the clauses in
+   	Section 2 of the LISENCE.TXT.
+
+   !	mod_watch.c: watchGetCanonicalName() will now detect when
+   	mod_vhost_alias is being used and perform a sub-request
+   	to validate the client supplied host name before it can
+   	used. This should eliminate counters being generated for
+   	sites not hosted by the server.
+
+   +	mod_watch.c: Add new handler "watch-list". Similar to watch-table,
+   	returns all the counters at once in watch-info format. Intended to
+   	reduce multiple MRTG requests to one batched processed request.
+   	Requested by <jdc at parodius dot com>. No script at this time.
+
+   !	mod_watch.c: Fix seg. fault. in watchGetCanonicalName() caused by
+   	invalid requests that fail to parse correctly. In such cases some
+   	of the contents of request_rec may be null, such as r->hostname.
+   	Reported by <gabriel at barazer dot net>.
+
+--3.13--
+
+   !	SharedHash.c: renamed "table" to "tp", because of some user
+   	namespace conflict on Mac OS X 10.1 within the header files.
+
+   !	SharedHash.[ch]: added new fields ifAvgRate and ifActive in
+   	preparation for mod_throttle/4.0
+
+   !	mod_watch.c: added ";" null statement after lines 863 and 894,
+	because Mac OS X cc complains. Also replaced LARGE string with
+	embedded newlines into separate ap_rprintf() statements,
+	because the Mac OS X cc doesn't like it.
+
+   !	*.h: Wrap all the externs in the headers with `extern "C" {...}'
+
+   +	Shared.c: Add MMAP_ANON as a SHARED_MEMORY_API technique (for
+	use with Mac OS X).
+
+   +	Makefile: Added Mac OS X compile time configuration.
+
+   !	Mutex.c: FLOCK_API and FCNTL_API should not unlink() the
+	lockfile in MutexCreate() - in other words - don't expect the
+	usual Unix trick of opening a temporary file and unlink it
+	before using it will keep the file open or continue or
+	continue to create it. On Mac OS X this does not work.
+
+   !	mod_watch.c: Replaced ap_get_server_name() with
+	watchGetCanonicalName() to avoid generating many different
+	sets of counters for the same virtual host when
+	UseCanonicalName is off.
+
+   +	mod_watch.c, SharedHash.c, Makefile: watchInit() now verifies
+	the WatchSpoolDirectory and if necessary will create it, with
+	the correct permissions. The Makefile is no longer responsible
+	for this. Also when the weenie files are created, we make sure
+	they are owned by the Apache user.
+
+--3.12--
+
+   +	mod_watch.c: Add new tokens for WatchWhat so that its now possible
+   	to count things by-port number and/or as a whole.
+
+		As whole		By-Port
+		--------		-------
+		server			server-by-port
+		remote-ip		remote-ip-by-port
+		file-owner		file-owner-by-port
+		virtual-host		virtual-host-by-port
+
+	Note remote-ip-by-port is the port the request came to, not the
+	remote port the client is connecting from.
+
+   +	mod_watch.c: The length of the request and response headers are now
+   	added to ifInOctets and ifOutOctets respectively. Apache does not
+   	normally count them. Hey, you'll finally see some values for
+   	ifInOctets. See WatchWhat.
+
+   +	mod_watch.c: Add the ifInOctets column into the watch-table now that
+   	we'll have something to look at.
+
+   !	mod_watch.c: fix seg. fault when isWatchHandler in watchLog is null
+   	because of an error document redirect.
+
+--3.11--
+
+   +	Makefile: add uninstall target that removes scripts, dynamic
+   	and static modules. It does NOT yet disable the related LoadModule
+   	and AddModule directives in httpd.conf; must be done by hand.
+
+   +	nfields.pl: created utility to add/remove fields from spool
+   	files. Intended for future enhancements requiring additional
+   	fields.
+
+   !	mod_watch.c: Fix seg. fault for watch-table handler when
+   	"WatchStorage files", which was introduced by some debug code.
+
+   !	Makefile: move APXS into the configurable section.
+
+   !	mod_watch.c: avoid using global per request r/w variables as this
+   	will not be thread safe.
+
+   !	mod_watch.c: mod_gzip always sets a value for mod_gzip_output_size
+   	EVEN if it chooses not to compress a file, in which case the value
+   	is zero (0). This could result in ifOutOctets not being counted
+   	properly. This should now be fixed.
+
+   !	LICENSE.TXT: minor change from "author" or "author or licensee".
+
+--3.10--
+
+   !	mod_watch.c: Fixed incorrect report of shared memory available
+   	by watch-table. This came from of changes made in 3.8.
+
+--3.9--
+
+   +	mod_watch.c: Added enhancement that allows the values monitored
+   	by mod_watch to be passed to other modules. This is a prelude
+   	to a possible (though not yet certain) mod_watch / mod_throttle
+   	pairing, where mod_watch handles monitoring only and mod_throttle
+   	would handle enforcement. This saves me duplicating alot of
+   	the code in an up and coming mod_throttle/4.0, which shares
+   	similar data structures. (This is an idea I've been toying with
+   	since mod_watch/1.0.)
+
+   +	mod_watch.c: Add support for mod_gzip compressed output size.
+
+--3.8--
+
+   !	SharedHash.c: Perform bounds checking on the key string field for
+   	secuirty concerns raised by <zen-parse at gmx dot net>, where a rogue
+   	mod_php or mod_perl script could possibly alter the contents of
+   	shared memory hash table, in particular the pointers.
+
+   !	Memory.c: Reimplemented the code to avoid the use of pointers
+   	within the memory accounting structures and provide some basic
+   	means of verifying allocated and freed memory chunks. This
+   	addresses some secuirty concerns raised by <zen-parse at gmx dot net>.
+
+--3.7-- (private release)
+
+   !	Shared.c: fixed SharedDestroy() to detach AND remove the shared
+   	memory block for SYSTEMV_API.
+
+   +	Shared.c: added SharedGetSize() to flesh out the API for another
+   	project.
+
+--3.6--
+
+   !	mod_watch.html, apache2mrtg.html: synced with LICENSE.TXT.
+
+   +	Add WatchSpoolFile directive intended for supporting monitoring
+   	of <Directory> and <Location> blocks. <LocationMatch> or
+   	<Location regex> should work, but will be grouped together under
+   	the one WatchSpoolFile. Requested by Kevin Brooks (elf-friend)
+   	<brooks at netgate dot net>
+
+   !	Modified WatchWhat to accept "nothing".
+
+--3.5--
+
+   !	SharedHash.c: Fixed shLock(), shUnlock() to return -1 instead of 0
+   	when the table is NULL. This is consistant with MutexLock() and
+   	MutexUnlock().
+
+   !	mod_watch.c: Fixed watchContentTable() to try first shLock()
+   	then MutexLock() -- without the mixed-up return values for
+   	shLock(), shUnlock() -- yes, I'm an idiot for not testing more
+   	completely.
+
+--3.4--
+
+   !	mod_watch.c: Changed "WatchStorage files" to use a Mutex, but NOT
+   	allocate any shared memory (see 3.2 notes). This allows mod_watch
+   	to be used on FreeBSD 4.2 "jailed" (chroot?) environment in some
+   	capacity. The jailed environment appears to restrict the use of
+   	shared memory.
+
+   	Bugger me. FreeBSD jailed environment restricts even the use if
+   	System V semaphores. So the only choices for serialization are:
+
+  		-DSERIALIZATION_API=FCNTL_API
+  		-DSERIALIZATION_API=FLOCK_API
+
+   !	Mutex.c: MutexDestroy() would attempt to free() memory even if no
+   	API had been selected.
+
+   !	mod_watch.pl: Fix case when MRTG queries the Apache web server when
+   	its down and falsely reports activity.
+
+   	Actually I have since reasoned that this is NOT a bug in either
+   	MRTG or mod_watch, but a configuration issue with MRTG's
+   	"unknaszero" as zero option. I've however left in the changes since
+   	they are still useful.
+
+   !	notes-static.txt: Made minor text correction, since makefile macros
+   	are not applied when this file is displayed (duh).
+
+   !	Makefile: some minor changes to style.
+
+   +	Does anyone read these notes?
+
+--3.3--
+
+   !	LICENSE.TXT: has been changed once again to clarify some confusion
+   	concerning my intent and restrictions for commercial use. Essentially
+   	everyone is free to use it (schools, businesses, ISPs), but not
+   	allowed to sell it (alone or bundled with other software) without
+   	my permission.
+
+   !	SharedHash.c: Added several error messeages for when shCreate() fails.
+
+   !	mod_watch.c: removed static from watchMainServer for shCreate()
+   	error reporting.
+
+   !	mod_watch.c: renamed ml_id2uname() to watchGetUidName() for shCreate()
+   	error reporting.
+
+   +	mod_watch.c: added watchGetGidName() for shCreate() error reporting.
+
+   !	Shared.c: SharedCreate() for the SYSTEMV_API no longer releases the
+   	shared memory ID in advance, because FreeBSD 4.4 & HPUX don't like
+   	it when I later do a SharedPermission() on a non-existant ID.
+   	This means that if the Apache process exits abnormally, then shared
+   	memory blocks (and mutexes) will not be released to the system.
+   	You'll have to either reboot or use "ipcrm" to clean up manually.
+
+--3.2--
+
+   !	Makefile: Changed from POSIX.2 Korn Shell syntax, $(), to use
+   	old Bourne Shell syntax, ``, since some machines do not
+   	default to a POSIX shell.
+
+   !	Makefile: Restructure Makefile to build two different libraries
+   	for static and dynamic builds. Shared library complier flags have
+   	to be applied on all objects for HP-UX.
+
+   !	Makefile: Fixed makefile to use APXS macro throughout instead.
+
+   !	mod_watch.c: Fix bug where default configuration caused a seg.
+   	fault, because watchUpdate was not set. The work around was to
+   	explicitly specify a WatchStorage directive in httpd.conf.
+
+   !	SharedHash.c: Replaced use of NAME_MAX with MAX_KEY_LENGTH, since
+   	SunOS systems don't define NAME_MAX since it can vary depending
+   	on context (bah!).
+
+   +	NetworkTable.h: Add include of <sys/types.h> for FreeBSD 4.4.
+
+   !	Mutex.c: Added definitions of flock() contants for when <sys/file.h>
+   	fails to define them (SunOS and HP-UX machines).
+
+   !	mod_watch.c: Changed "WatchStorage files" to use the shared memory
+   	hash table mutex instead of flock() to simplify building under
+   	SunOS and HP-UX.
+
+   !	Memory.c: Fix memory aligment problem in MemoryAllocate() that
+   	would generate Bus Errors for memory accessed on non-word align
+   	addresses for some processors.
+
+   !	mod_watch.c: Fix bug when default SPOOLDIR value does NOT have a
+   	trailing slash.
+
+--3.1--
+
+   !	Rephrased Support conditions more simply.
+
+   !	mod_watch.c: "WatchItem all" failed to include remote-ip.
+
+   +	mod_watch.c: Added WatchNotLogged in order to force Apache NOT
+   	to log a transaction for the handlers in the access log.
+   	Suggested by Paul Andrews <andrews at shaw.ca>
+
+   +	Mutex.c, Shared.c: Added support for WIN32_API (not tested).
+
+--3.0--
+
+   !	LICENSE.TXT has been changed dramatically.  Please read.
+
+   +	mod_watch.c: add watch-copyright handler to display version
+   	and copyright message. See LICENSE.TXT 2) c)
+
+   -	mod_watch.c: Removed DBM as a possible storage policy, as it
+   	was far too slow to be ever practical.
+
+   +	mod_watch.c: Added new hash storage policy for a shared memory
+   	hash table with disk swapping to reduce disk accesses made from
+   	the files storage policy.
+
+   !	mod_watch.c: Replaced WatchStore by WatchStorage with new syntax.
+   	Added WatchSpoolDirectory and WatchHashTableSize.
+
+   +	mod_watch.c: Added WatchNetwork to include/exclude network
+   	connections for the purposes of counting. Intended for ISPs
+   	that want to exclude their internal network from skewing the
+   	stats for a virtual host during development and testing of a web
+   	site. Suggested by Peter Ruegg <pruegg at eproduction.ch>
+
+   +	mod_watch.c: Added the ability to watch remote-ip addresses. See
+   	WatchWhat. This will generate lots of data for extremely active
+   	servers.
+
+   !	Makefile: now handles both dynamic and static builds, and supplies
+   	more commentary on manual steps.
+
+--2.4--
+
+   !	mod_watch.pl: Fixed the script to make an end-point request
+   	instead of a proxy style request, even though RFC 2616 states
+   	that it should be handled by servers.
+
+--2.3--
+
+   !	mod_watch.c: I'm an idiot. The WatchWhat constants and code
+   	for file-owner and virtual-host were reversed (thanks to
+   	Oleg Arkhangelsky <oleg123 at progtech dot ru> for finding this).
+
+--2.2--
+
+   !	mod_watch.c: fixed problem with WatchWhat watching everything
+   	regardless of the setting.
+
+--2.1--
+
+   !	mod_watch.pl: fixed incorrect regular expression, which failed
+   	to match some domain and/or user names.
+
+   !	index.shtml: Updated Notes concerning systems known to work.
+
+--2.0--
+
+   !	mod_watch.c: Replaced WatchDbmServer & WatchDbmDatabase with
+	WatchStore. DBM server can be a	bottle neck for high volume
+	servers, so other methods are being considered.
+
+	WatchStore provides support for "weenie" files as an
+	alternative storage policy.  This policy should be suitable
+	for servers with fast disks and/or good caches that server
+	many virtual hosts. (Needs to be benchmarked.)
+
+	Other storage policies being considered for future releases
+	are random-access and/or memory-mapped.
+
+   +	mod_watch.c: added "watch-info" handler to display the raw
+   	counters.
+
+   +	mod_watch.c: added checks in log_* not to count output from
+  	mod_watch content handlers.
+
+   +	mod_watch.c: added WatchWhat directive to provided finer
+   	control over what actually needs to be logged to the DBM
+   	server or weenie files. Currently there are three items:
+   	virtual-host, file-owner, and the server.  The default is to
+   	watch all three.
+
+   !	mod_watch.pl: updated to use "watch-info" output as a
+   	generic means of querying the counters independent of storage
+   	policy.
+
+   !	apache2mrtg.pl: updated to correspond to current mod_watch.pl
+   	usage.  It reflected my original 0.5 test case and was
+   	completely broken.
+
+   +	convert.pl: utility to convert to/from DBM and weenie files.
+
+
+--1.2--
+
+	mod_watch.c: Add SERVER database key to track all requests.
+
+	mod_watch.c: Add new counter for "documents" and
+	WatchDocuments directive.
+
+	mod_watch.pl: Replaced -r option with -f option to select
+	which pair of fields to return for In and Out.  The field
+	names are:
+
+		ifInOctets ifOutOctets ifRequests ifDocuments
+
+	mod_watch.pl: Add -t target option for when the key and target
+	names are actually different.  [Tobias Oetike author or MRTG
+	told explained a few things to me that make this option
+	pointless, so its not documented.]
+
+	dbm-server.pl: Add option -D for debugging. Changes special
+	file paths to point to the current directory.
+
+--1.1--
+
+	mod_watch.c: Fix segmentation fault caused by dbm_connect()
+	returning NULL when the dbm-server.pl process is not running.
+
+--1.0--
+
+	Replaced with TCP implementation to avoid possible lost
+	updates. While my testing never showed any problems, I have a
+	light load on my server.  I wanted the dbm-server.pl to make
+	use of listen() to queue connections to the DBM database.
+
+	Revised the DBM server request and response message formats to
+	include version numbers and return status code. The headers
+	are meant to be small enough to read on the first packet so
+	that the length of data can be determined for the next read.
+
+--0.5--
+
+	Never released.  UDP implementation.  Alpha testing.
+
+
+
+
+

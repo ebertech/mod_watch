@@ -1,0 +1,99 @@
+<html>
+<head>
+<title>
+Snert . Com - Software - apache2mrtg.pl
+</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script language="JavaScript" type="text/javascript" src="./mailto.js"></script>
+<link rel="stylesheet" type="text/css" href="./style.css">
+</head>
+
+<body background="Img/bg.gif" bgcolor="#ffffff" text="#000000" link="#0000ff" vlink="#000080" alink="#ff00ff">
+
+<!-- MARGINS -->
+<table cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr>
+	<td rowspan="2" width="120">&nbsp;</td>
+	<td width="250"><img alt="Snert . Com" src="Img/sun.gif" width="105" height="103"></td>
+	<td align="left">
+		<span class="title">apache2mrtg.pl</span>
+		<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<span class="plain">from</span>&nbsp;&nbsp;
+		<span class="snert">Snert . Com</span>
+	</td>
+	<td rowspan="2" valign="top" align="right" width="60">&nbsp;</td>
+</tr><tr>
+	<td colspan="2">
+<!-- PAGE BODY -->
+
+<div style="padding-right: 60px">
+
+<h2 align="center">Apache to MRTG Configuration</h2>
+
+<p style="text-align: center;">
+<a href="apache2mrtg.shtml">apache2mrtg.pl</a>
+- <a href="index.shtml">mod_watch</a>
+- <a href="mod_watch.shtml">mod_watch.pl</a>
+<br>
+<a href="http://www.snert.com/">Welcome</a>
+- <a href="http://www.snert.com/Software/index.html">Software</a>
+</p>
+
+<a name="Syntax"></a>
+<h3>Syntax</h3>
+
+<p>
+<span class="syntax">apache2mrtg.pl path/to/httpd.conf</span>
+</p>
+
+<a name="Description"></a>
+<h3>Description</h3>
+
+<p>
+Use apache2mrtg.pl to parse the httpd.conf file to create a MRTG
+configuration script for all the defined virtual hosts.  The output can
+be appended to or included in an existing <code>mrtg.cfg</code> file.
+There currently is no support to generate MRTG configurations for virtual
+hosts derived from mod_vhosts_alias or local user names.
+</p>
+<p>
+The generated MRTG configuration will periodically make calls to <a
+href="mod_watch.html">mod_watch.pl</a> to obtain the bytes in, bytes out,
+uptime, and MRTG target name. If MRTG is properly configured (please see
+the <a href="http://www.mrtg.org/">MRTG documentation</a>),
+you should be able to see assorted graphs concerning data transfer
+rates for your virtual hosts and local users you are monitoring.
+</p>
+
+<!--#include file="license-body.html" -->
+
+<br>
+
+<p style="text-align: center;">
+<a href="apache2mrtg.shtml">apache2mrtg.pl</a>
+- <a href="index.shtml">mod_watch</a>
+- <a href="mod_watch.shtml">mod_watch.pl</a>
+<br>
+<a href="http://www.snert.com/">Welcome</a>
+- <a href="http://www.snert.com/Software/index.html">Software</a>
+</p>
+
+
+<!-- copyright -->
+<p class="copyright" style="text-align: center;">
+<nobr>Copyright 2001, 2003 by
+<a href="javascript:mailto('achowe at snert dot com')">
+Anthony C Howe</a></nobr>
+<nobr>All rights reserved.</nobr>
+</p>
+<!--end copyright-->
+
+<!-- END PAGE BODY -->
+	</td>
+</tr>
+</table>
+
+<!-- END MARGINS -->
+
+</body>
+</html>
