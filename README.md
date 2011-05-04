@@ -77,7 +77,7 @@ There is now a mailing list for announcements, discussion, and community
 support of my Apache modules:
 
 	The [modules] Archive
-	[<http://www.snert.com/Software/ecartis/index.php?go=/modules>](http://www.snert.com/Software/ecartis/index.php?go=/modules)
+	<http://www.snert.com/Software/ecartis/index.php?go=/modules>
 
 	To get help for the [modules] mailing list:
 	Email modules-request@snert.com with the subject "help".
