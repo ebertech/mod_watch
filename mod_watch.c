@@ -426,30 +426,30 @@ watchGetCanonicalName(request_rec *r)
 		}
 	}
 
-	if (watchDynamicVirtualHost) {
-		/* The client supplied host name does not correspond to a
-		 * declared name or alias for this server. See if a simple
-		 * sub-request for the host name in question would succeed,
-		 * in which case the client supplied host name is good.
-		 */
-		int exists;
-		request_rec *sub;
-
-		sub = ap_sub_req_method_uri("HEAD", "/", r, (ap_filter_t *) 0);
-		exists = sub->finfo.filetype != APR_NOFILE;
-		ap_destroy_sub_req(sub);
-
-		ap_log_error(
-			APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, watchMainServer,
-			"watchGetCanonicalName(%lx) host=\"%s\" exits=%d",
-			r, r->hostname, exists
-		);
-
-		if (exists) {
-			ap_str_tolower((char *) r->hostname);
-			return (char *) r->hostname;
-		}
-	}
+	// if (watchDynamicVirtualHost) {
+	//     /* The client supplied host name does not correspond to a
+	//      * declared name or alias for this server. See if a simple
+	//      * sub-request for the host name in question would succeed,
+	//      * in which case the client supplied host name is good.
+	//      */
+	//     int exists;
+	//     request_rec *sub;
+	// 
+	//     sub = ap_sub_req_method_uri("HEAD", "/", r, (ap_filter_t *) 0);
+	//     exists = sub->finfo.filetype != APR_NOFILE;
+	//     ap_destroy_sub_req(sub);
+	// 
+	//     ap_log_error(
+	//       APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, watchMainServer,
+	//       "watchGetCanonicalName(%lx) host=\"%s\" exits=%d",
+	//       r, r->hostname, exists
+	//     );
+	// 
+	//     if (exists) {
+	//       ap_str_tolower((char *) r->hostname);
+	//       return (char *) r->hostname;
+	//     }
+	//   }
 
 	/* The client supplied host name does not correspond to ANYTHING.
 	 * Do NOT log the results of this request by virtual host, since
